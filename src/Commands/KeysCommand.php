@@ -44,12 +44,12 @@ class KeysCommand extends Command
             return 1;
         } else {
             if (class_exists(LegacyRSA::class)) {
-                $keys = (new LegacyRSA)->createKey($this->input ? (int) $this->option('length') : 4096);
+                $keys = (new LegacyRSA)->createKey((int) $this->option('length'));
 
                 file_put_contents($publicKey, Arr::get($keys, 'publickey'));
                 file_put_contents($privateKey, Arr::get($keys, 'privatekey'));
             } else {
-                $key = RSA::createKey($this->input ? (int) $this->option('length') : 4096);
+                $key = RSA::createKey((int) $this->option('length'));
 
                 file_put_contents($publicKey, (string) $key->getPublicKey());
                 file_put_contents($privateKey, (string) $key);
