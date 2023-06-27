@@ -131,7 +131,36 @@ This is the contents of the published config file:
     ```php
         $schedule->command('refresh-token:prune')->daily();
     ```
+  
+## Overriding the default model
+- You can override the default model by calling the `useRefreshTokenModel()` on the `Laranex\RefreshToken\RefreshToken\RefreshToken` class 
+- Your custom model should extend `Laranex\RefreshToken\RefreshToken\RefreshToken` class
 
+    ```php
+        namespace App\Providers;
+        
+        use Illuminate\Support\ServiceProvider;
+        
+        class AppServiceProvider extends ServiceProvider
+        {
+            /**
+             * Register any application services.
+             */
+            public function register(): void
+            {
+                Laranex\RefreshToken\RefreshToken::useRefreshTokenModel(YourCustomModel::class)
+            }
+        
+            /**
+             * Bootstrap any application services.
+             */
+            public function boot(): void
+            {
+                //
+            }
+}
+    ```
+    
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.

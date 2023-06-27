@@ -1,7 +1,5 @@
 <?php
 
-use Laranex\RefreshToken\Models\RefreshToken;
-
 return [
 
     /*
@@ -17,16 +15,6 @@ return [
     'private_key' => env('REFRESH_TOKEN_PRIVATE_KEY'),
 
     'public_key' => env('REFRESH_TOKEN_PUBLIC_KEY'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Refresh Token Model
-    |--------------------------------------------------------------------------
-    |
-    | Refresh Token Model to manage refresh tokens
-    |
-    */
-    'model' => RefreshToken::class,
 
     /*
     |--------------------------------------------------------------------------
