@@ -14,7 +14,6 @@ class PruneCommand extends Command
      */
     protected $signature = 'refresh-token:prune';
 
-
     /**
      * The console command description.
      *
@@ -24,8 +23,6 @@ class PruneCommand extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(): int
     {
