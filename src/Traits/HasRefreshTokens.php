@@ -13,7 +13,6 @@ trait HasRefreshTokens
 {
     /**
      * Create a refresh token
-     * @return string
      */
     public function createRefreshToken(): string
     {
