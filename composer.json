@@ -27,7 +27,8 @@
         "illuminate/encryption": "^9.0|^10.0",
         "illuminate/http": "^9.0|^10.0",
         "illuminate/support": "^9.0|^10.0",
-        "lcobucci/jwt": "^4.3|^5.0"
+        "lcobucci/jwt": "^4.3|^5.0",
+        "phpseclib/phpseclib": "^3.0"
     },
     "require-dev": {
         "laravel/pint": "^1.0",
@@ -48,7 +49,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Laranex\\RefreshToken\\Tests\\": "tests/"
+            "Laranex\\RefreshToken\\Tests\\": "tests/",
+            "Laranex\\RefreshToken\\Database\\Factories\\": "database/factories/"
         }
     },
     "scripts": {

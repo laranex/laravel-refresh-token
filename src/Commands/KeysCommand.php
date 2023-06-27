@@ -3,9 +3,7 @@
 namespace Laranex\RefreshToken\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Arr;
 use Laranex\RefreshToken\RefreshToken;
-use phpseclib\Crypt\RSA as LegacyRSA;
 use phpseclib3\Crypt\RSA;
 
 class KeysCommand extends Command
@@ -43,17 +41,10 @@ class KeysCommand extends Command
 
             return 1;
         } else {
-            if (class_exists(LegacyRSA::class)) {
-                $keys = (new LegacyRSA)->createKey((int) $this->option('length'));
+            $key = RSA::createKey((int) $this->option('length'));
 
-                file_put_contents($publicKey, Arr::get($keys, 'publickey'));
-                file_put_contents($privateKey, Arr::get($keys, 'privatekey'));
-            } else {
-                $key = RSA::createKey((int) $this->option('length'));
-
-                file_put_contents($publicKey, (string) $key->getPublicKey());
-                file_put_contents($privateKey, (string) $key);
-            }
+            file_put_contents($publicKey, (string) $key->getPublicKey());
+            file_put_contents($privateKey, (string) $key);
 
             $this->info('Encryption keys generated successfully.');
         }

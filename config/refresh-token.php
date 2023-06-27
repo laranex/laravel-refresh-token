@@ -1,6 +1,6 @@
 <?php
 
-use Laranex\RefreshToken\RefreshToken;
+use Laranex\RefreshToken\Models\RefreshToken;
 
 return [
 

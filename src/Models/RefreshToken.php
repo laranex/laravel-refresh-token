@@ -2,11 +2,14 @@
 
 namespace Laranex\RefreshToken\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class RefreshToken extends Model
 {
+    use HasFactory;
+
     protected $primaryKey = 'id';
 
     protected $fillable = ['id', 'refreshable_id', 'refreshable_type', 'revoked', 'expires_at'];
