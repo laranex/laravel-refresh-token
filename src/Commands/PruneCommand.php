@@ -19,15 +19,17 @@ class PruneCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Delete all expired and revoked refresh tokens.';
+    protected $description = 'Delete all expired or revoked refresh tokens.';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        return RefreshToken::refreshTokenModel()::where('expires_at', '<', now())
+        RefreshToken::refreshTokenModel()::where('expires_at', '<', now())
             ->orWhere('revoked', true)
             ->delete();
+
+        return 0;
     }
 }
