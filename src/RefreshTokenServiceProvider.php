@@ -21,4 +21,3 @@ class RefreshTokenServiceProvider extends PackageServiceProvider
         RefreshToken::loadKeysFrom(storage_path());
     }
 }
-
