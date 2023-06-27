@@ -7,6 +7,7 @@ use DateInterval;
 use DateTimeInterface;
 use DateTimeZone;
 use Illuminate\Config\Repository as Config;
+use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 use Lcobucci\Clock\SystemClock;
 use Lcobucci\JWT\JwtFacade;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -14,7 +15,6 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Validation\Constraint;
 use League\OAuth2\Server\CryptKey;
 use Throwable;
-use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 
 class RefreshToken
 {
@@ -54,7 +54,7 @@ class RefreshToken
     /**
      * Get or set when refresh tokens expire.
      *
-     * @param  ?DateTimeInterface $date
+     * @param  ?DateTimeInterface  $date
      */
     public static function refreshTokensExpireIn(DateTimeInterface $date = null): DateInterval|static
     {
@@ -104,7 +104,7 @@ class RefreshToken
         $file = ltrim($file, '/\\');
 
         return static::$keyPath
-            ? rtrim(static::$keyPath, '/\\') . DIRECTORY_SEPARATOR . $file
+            ? rtrim(static::$keyPath, '/\\').DIRECTORY_SEPARATOR.$file
             : storage_path($file);
     }
 
@@ -113,10 +113,10 @@ class RefreshToken
      */
     public static function makeCryptKey(string $type): CryptKey
     {
-        $key = str_replace('\\n', '\n', app()->make(Config::class)->get('refresh-token.' . $type . '_key') ?? '');
+        $key = str_replace('\\n', '\n', app()->make(Config::class)->get('refresh-token.'.$type.'_key') ?? '');
 
-        if (!$key) {
-            $key = 'file://' . RefreshToken::keyPath('oauth-' . $type . '.key');
+        if (! $key) {
+            $key = 'file://'.RefreshToken::keyPath('oauth-'.$type.'.key');
         }
 
         return new CryptKey($key, null, false);
