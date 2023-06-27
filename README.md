@@ -129,7 +129,7 @@ This is the contents of the published config file:
   
 ## Overriding the default model
 - You can override the default model by calling the `useRefreshTokenModel()` on the `Laranex\RefreshToken\RefreshToken\RefreshToken` class 
-- Your custom model should extend `Laranex\RefreshToken\RefreshToken\RefreshToken` class
+- Your custom model should extend `Laranex\RefreshToken\RefreshToken\Models\RefreshToken` class
 
     ```php
         namespace App\Providers;
