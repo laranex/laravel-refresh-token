@@ -15,7 +15,8 @@ class RefreshTokenServiceProvider extends PackageServiceProvider
             ->name('laravel-refresh-token')
             ->hasConfigFile()
             ->hasCommands([KeysCommand::class, PruneCommand::class])
-            ->hasMigration('create_laravel_refresh_tokens_table');
+            ->hasMigration('create_laravel_refresh_tokens_table')
+            ->runsMigrations();
 
         RefreshToken::loadKeysFrom(storage_path());
     }
