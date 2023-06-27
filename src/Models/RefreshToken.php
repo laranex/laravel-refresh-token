@@ -26,17 +26,17 @@ class RefreshToken extends Model
      */
     public function revoke(): bool
     {
-        $this->revoked = true;
-
-        return $this->save();
+        return $this->update([
+            'revoked' => true,
+        ]);
     }
 
     /*
      * Revoke all refresh tokens which are related to the current token
      */
-    public function revokeAll(): bool
+    public function revokeAll(): int
     {
-        return parent::where('refreshable_id', $this->refreshable_id)
+        return $this->where('refreshable_id', $this->refreshable_id)
             ->where('refreshable_type', $this->refreshable_type)
             ->update(['revoked' => true]);
     }
