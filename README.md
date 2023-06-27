@@ -111,10 +111,6 @@ This is the contents of the published config file:
       ```php
           $verifiedToken->revoke();
       ```
-    - Revoking the refresh token (The token will no longer be valid)
-      ```php
-          $verifiedToken->revoke();
-      ```
     - Revoking all refresh tokens which are related to current refresh token instance
       ```php
           $verifiedToken->revokeAll();
