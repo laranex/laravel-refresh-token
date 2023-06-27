@@ -72,12 +72,11 @@ This is the contents of the published config file:
 ```
 
 ## Usage
+- Use the trait in your refresh tokenable model
 
 ```php
-
-    // Use the trait in your refresh tokenable model
     class User extends Authenticatable{
-        use HasRefreshToken;
+        use HasRefreshTokens;
     
     }
 ```
