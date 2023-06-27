@@ -131,7 +131,6 @@ This is the contents of the published config file:
     ```php
         $schedule->command('refresh-token:prune')->daily();
     ```
-    
 
 ## Changelog
 
