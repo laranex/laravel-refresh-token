@@ -1,58 +1,65 @@
-name: run-tests
-
+name: Test Laravel Github action
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - main
+      - develop
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-        php: [ 8.2, 8.1 ]
-        laravel: [ 9.*, 10.* ]
-        stability: [ prefer-lowest, prefer-stable ]
-        include:
-          - laravel: 9.*
-            testbench: 7.*
-            carbon: ^2.63
-            pestphp/pest: ^1.22
-            pestphp/pest-plugin-laravel: ^1.7
-          - laravel: 10.*
-            testbench: 8.*
-            carbon: ^2.63
-            pestphp/pest: ^2.0
-            pestphp/pest-plugin-laravel: ^2.0
+  laravel-tests:
+    runs-on: ubuntu-latest
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: [ '8.2','8.1','8.0','7.4','7.3' ]
+        dependency-stability: [ 'prefer-stable','prefer-lowest' ]
+
+        laravel: [ '10.*','9.*','8.*' ]
+        include:
+          - laravel:  10.*
+            testbench: 8.*
+          - laravel:  9.*
+            testbench: 7.*
+          - laravel:  8.*
+            testbench: 6.*
+
+    name: P${{ matrix.php-versions }} - L${{ matrix.laravel }} - ${{ matrix.dependency-stability }} - ${{ matrix.operating-system}}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+    - name: Install PHP versions
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
+    - name: Install Laravel Dependencies
+      run: |
+        composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+        composer update --${{ matrix.dependency-stability }} --prefer-dist --no-interaction --no-suggest
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, sodium
-          coverage: none
+    - name: Update Dependencies with latest stable
+      if: matrix.dependency-stability == 'prefer-stable'
+      run: composer update --prefer-stable
+    - name: Update Dependencies with lowest stable
+      if: matrix.dependency-stability == 'prefer-lowest'
+      run: composer update --prefer-stable --prefer-lowest
 
-      - name: Setup problem matchers
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+    - name: Generate key
+      run: php artisan key:generate
+    - name: Show dir
+      run: pwd
+    - name: PHP Version
+      run: php --version
 
-      - name: Install dependencies
-        run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+# Code quality
 
-      - name: List Installed Dependencies
-        run: composer show -D
+    - name: Execute tests (Unit and Feature tests) via PestPHP
+# Set environment
+      env:
+        SESSION_DRIVER: array
 
-      - name: Execute tests
-        run: vendor/bin/pest
+      run: vendor/bin/pest
+
