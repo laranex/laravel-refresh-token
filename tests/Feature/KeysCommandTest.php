@@ -1,7 +1,7 @@
 <?php
 
 it('can create public and private key files', function () {
-    if ($code = $this->artisan('refresh-token:keys')->execute() !== 0) {
+    if (($code = $this->artisan('refresh-token:keys')->execute()) !== 0) {
         $code = $this->artisan('refresh-token:keys --force')->execute();
     }
 
