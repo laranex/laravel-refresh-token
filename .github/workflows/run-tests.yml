@@ -14,12 +14,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         php: [8.2, 8.1]
-        laravel: [9.*, 10.*]     # Add Laravel 9.* here
+        laravel: [9.*, 10.*]
         stability: [prefer-lowest, prefer-stable]
         include:
-          - laravel: 9.*          # Include Laravel 9.*
-            testbench: 7.*        # Update the Testbench version if needed
-            carbon: ^2.63        # Update the Carbon version if needed
+          - laravel: 9.*
+            testbench: 7.*
+            carbon: ^2.63
+            pestphp/pest-plugin-laravel: ^1.7
           - laravel: 10.*
             testbench: 8.*
             carbon: ^2.63
