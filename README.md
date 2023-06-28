@@ -2,6 +2,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
 [![Total Downloads](https://img.shields.io/packagist/dt/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
+[![run-tests](https://github.com/laranex/laravel-refresh-token/actions/workflows/run-tests.yml/badge.svg)](https://github.com/laranex/laravel-refresh-token/actions/workflows/run-tests.yml)
 
 A package to help you implement refresh token mechanism in your laravel application
 
