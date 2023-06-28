@@ -10,3 +10,5 @@ testbench.yaml
 vendor
 node_modules
 composer.lock
+.phpunit.*
+coverage-report
