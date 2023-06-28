@@ -71,6 +71,16 @@ This is the contents of the published config file:
     ];
 ```
 
+## Overriding the default values (Optional)
+
+The following static methods are available under the `Laranex\RefreshToken\RefreshToken` class to override the default values. Invoking them 
+with the value you want in the service provider will override the default values.
+
+- `useRefreshTokenModel(string $refreshTokenModel): void` 
+- `loadKeysFrom(string $path): void` 
+- `refreshTokensExpireIn(DateTimeInterface $date = null): DateInterval|static`
+
+
 ## Usage
 - Use the trait in your refresh tokenable model
 
@@ -126,35 +136,7 @@ This is the contents of the published config file:
     ```php
         $schedule->command('refresh-token:prune')->daily();
     ```
-  
-## Overriding the default model
-- You can override the default model by calling the `useRefreshTokenModel()` on the `Laranex\RefreshToken\RefreshToken\RefreshToken` class 
-- Your custom model should extend `Laranex\RefreshToken\RefreshToken\Models\RefreshToken` class
 
-    ```php
-        namespace App\Providers;
-        
-        use Illuminate\Support\ServiceProvider;
-        
-        class AppServiceProvider extends ServiceProvider
-        {
-            /**
-             * Register any application services.
-             */
-            public function register(): void
-            {
-                Laranex\RefreshToken\RefreshToken::useRefreshTokenModel(YourCustomModel::class)
-            }
-        
-            /**
-             * Bootstrap any application services.
-             */
-            public function boot(): void
-            {
-                //
-            }
-}
-    ```
     
 ## Changelog
 
