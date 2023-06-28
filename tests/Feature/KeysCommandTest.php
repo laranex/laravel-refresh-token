@@ -6,7 +6,6 @@ use Laranex\RefreshToken\Tests\TestCase;
 
 class KeysCommandTest extends TestCase
 {
-
     /** @test */
     public function it_can_create_public_and_private_key_files(): void
     {
