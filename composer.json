@@ -28,7 +28,9 @@
         "illuminate/http": "^9.0|^10.0",
         "illuminate/support": "^9.0|^10.0",
         "lcobucci/jwt": "^4.3|^5.0",
-        "phpseclib/phpseclib": "^3.0"
+        "lcobucci/clock": "^2.2 || ^3.0",
+        "phpseclib/phpseclib": "^3.0",
+        "league/oauth2-server": "7.* | ^8.5.1"
     },
     "require-dev": {
         "laravel/pint": "^1.0",

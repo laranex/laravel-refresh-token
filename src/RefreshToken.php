@@ -63,7 +63,7 @@ class RefreshToken
         }
 
         static::$refreshTokensExpireIn = Carbon::now()->diff($date);
-
+        /** @phpstan-ignore-next-line */
         return new static;
     }
 
