@@ -18,10 +18,10 @@ jobs:
         stability: [prefer-lowest, prefer-stable]
         include:
           - laravel: 9.*          # Include Laravel 9.*
-            testbench: 8.*        # Update the Testbench version if needed
+            testbench: 7.*        # Update the Testbench version if needed
             carbon: ^2.63        # Update the Carbon version if needed
           - laravel: 10.*
-            testbench: ^1.0
+            testbench: 8.*
             carbon: ^2.63
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
