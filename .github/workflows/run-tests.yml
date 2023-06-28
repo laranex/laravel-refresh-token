@@ -15,17 +15,15 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: [ '8.2','8.1','8.0','7.4','7.3' ]
+        php-versions: [ '8.2','8.1']
         dependency-stability: [ 'prefer-stable','prefer-lowest' ]
 
-        laravel: [ '10.*','9.*','8.*' ]
+        laravel: [ '10.*','9.*' ]
         include:
           - laravel:  10.*
             testbench: 8.*
           - laravel:  9.*
             testbench: 7.*
-          - laravel:  8.*
-            testbench: 6.*
 
     name: P${{ matrix.php-versions }} - L${{ matrix.laravel }} - ${{ matrix.dependency-stability }} - ${{ matrix.operating-system}}
 
@@ -53,8 +51,6 @@ jobs:
       run: pwd
     - name: PHP Version
       run: php --version
-
-# Code quality
 
     - name: Execute tests (Unit and Feature tests) via PestPHP
 # Set environment
