@@ -19,10 +19,12 @@ jobs:
         include:
           - laravel: 9.*
             testbench: 7.*
+            pestphp/pest-plugin-laravel: ^1.0
             carbon: ^2.63
           - laravel: 10.*
             testbench: 8.*
             carbon: ^2.63
+            pestphp/pest-plugin-laravel: ^2.0
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
