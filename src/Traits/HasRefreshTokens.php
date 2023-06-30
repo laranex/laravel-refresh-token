@@ -24,7 +24,7 @@ trait HasRefreshTokens
             'id' => $tokenId,
             'refreshable_id' => $this->getKey(),
             'refreshable_type' => get_class($this),
-            'issued_at' => $issuedAt,
+            'created_at' => $issuedAt,
             'expires_at' => $expiredAt,
         ]);
 
