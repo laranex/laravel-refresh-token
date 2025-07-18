@@ -38,7 +38,7 @@ class RefreshToken
     /**
      * Set the refresh token model class name.
      */
-    public static function useRefreshTokenModel(string $refreshTokenModel): void
+    public static function useRefreshTokenModel(string $refreshTokenModel)
     {
         static::$refreshTokenModel = $refreshTokenModel;
     }
@@ -46,7 +46,7 @@ class RefreshToken
     /**
      * Get the refresh token model class name.
      */
-    public static function refreshTokenModel(): string
+    public static function refreshTokenModel()
     {
         return static::$refreshTokenModel;
     }
@@ -56,7 +56,7 @@ class RefreshToken
      *
      * @param  ?DateTimeInterface  $date
      */
-    public static function refreshTokensExpireIn(DateTimeInterface $date = null): DateInterval|static
+    public static function refreshTokensExpireIn(DateTimeInterface $date = null)
     {
         if (is_null($date)) {
             return static::$refreshTokensExpireIn ?? new DateInterval('P1Y');
@@ -91,7 +91,7 @@ class RefreshToken
     /**
      * Set the storage location of the encryption keys.
      */
-    public static function loadKeysFrom(string $path): void
+    public static function loadKeysFrom(string $path)
     {
         static::$keyPath = $path;
     }
@@ -99,7 +99,7 @@ class RefreshToken
     /**
      * The location of the encryption keys.
      */
-    public static function keyPath(string $file): string
+    public static function keyPath(string $file)
     {
         $file = ltrim($file, '/\\');
 
@@ -111,7 +111,7 @@ class RefreshToken
     /**
      * Create a CryptKey instance without permissions check.
      */
-    public static function makeCryptKey(string $type): CryptKey
+    public static function makeCryptKey(string $type)
     {
         $key = str_replace('\\n', '\n', app()->make(Config::class)->get('refresh-token.'.$type.'_key') ?? '');
 

@@ -15,7 +15,7 @@ class RefreshTokenFactory extends Factory
         $this->model = RefreshToken::refreshTokenModel();
     }
 
-    public function definition(): array
+    public function definition()
     {
         return [
             'id' => bin2hex(random_bytes(40)),

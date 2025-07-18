@@ -19,7 +19,7 @@ class RefreshToken extends Model
         return config('refresh-token.table', parent::getTable());
     }
 
-    public function instance(): MorphTo
+    public function instance()
     {
         return $this->morphTo('refreshable');
     }
@@ -27,7 +27,7 @@ class RefreshToken extends Model
     /*
      * Revoke a refresh token
      */
-    public function revoke(): bool
+    public function revoke()
     {
         /** @phpstan-ignore-next-line */
         return $this->update([
@@ -38,7 +38,7 @@ class RefreshToken extends Model
     /*
      * Revoke all refresh tokens which are related to the current token
      */
-    public function revokeAll(): int
+    public function revokeAll()
     {
         /** @phpstan-ignore-next-line */
         return $this->where('refreshable_id', $this->refreshable_id)

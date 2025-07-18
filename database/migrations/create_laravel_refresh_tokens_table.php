@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create($this->getTable(), function (Blueprint $table) {
             $table->string('id');
@@ -24,12 +24,12 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists($this->getTable());
     }
 
-    private function getTable(): string
+    private function getTable()
     {
         return config('refresh-token.table');
     }

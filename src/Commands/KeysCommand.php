@@ -27,7 +27,7 @@ class KeysCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle()
     {
         [$publicKey, $privateKey] = [
             RefreshToken::keyPath('refresh-token-public.key'),

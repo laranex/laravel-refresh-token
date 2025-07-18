@@ -14,7 +14,7 @@ trait HasRefreshTokens
     /**
      * Create a refresh token
      */
-    public function createRefreshToken(): string
+    public function createRefreshToken()
     {
         $issuedAt = new DateTimeImmutable();
         $expiredAt = $issuedAt->add(RefreshToken::refreshTokensExpireIn());

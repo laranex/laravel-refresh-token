@@ -24,7 +24,7 @@ class PruneCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle()
     {
         RefreshToken::refreshTokenModel()::where('expires_at', '<', now())
             ->orWhere('revoked', true)
