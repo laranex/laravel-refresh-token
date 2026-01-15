@@ -25,8 +25,6 @@ class RefreshToken
 
     /**
      * The date when refresh tokens expire.
-     *
-     * @var ?DateInterval
      */
     public static ?DateInterval $refreshTokensExpireIn;
 
@@ -53,16 +51,15 @@ class RefreshToken
 
     /**
      * Get or set when refresh tokens expire.
-     *
-     * @param  ?DateTimeInterface  $date
      */
-    public static function refreshTokensExpireIn(DateTimeInterface $date = null): DateInterval|static
+    public static function refreshTokensExpireIn(?DateTimeInterface $date = null): DateInterval|static
     {
         if (is_null($date)) {
             return static::$refreshTokensExpireIn ?? new DateInterval('P1Y');
         }
 
         static::$refreshTokensExpireIn = Carbon::now()->diff($date);
+
         /** @phpstan-ignore-next-line */
         return new static;
     }
@@ -73,9 +70,9 @@ class RefreshToken
     public static function tokenable(string $jwtToken): ?RefreshTokenModel
     {
         try {
-            $verifiedToken = (new JwtFacade())->parse(
+            $verifiedToken = (new JwtFacade)->parse(
                 $jwtToken,
-                new Constraint\SignedWith(new Sha256(), InMemory::plainText(self::makeCryptKey('public')->getKeyContents())),
+                new Constraint\SignedWith(new Sha256, InMemory::plainText(self::makeCryptKey('public')->getKeyContents())),
                 new Constraint\StrictValidAt(
                     new SystemClock(new DateTimeZone(date_default_timezone_get()))
                 ),
