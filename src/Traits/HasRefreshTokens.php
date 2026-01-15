@@ -16,7 +16,7 @@ trait HasRefreshTokens
      */
     public function createRefreshToken(): string
     {
-        $issuedAt = new DateTimeImmutable();
+        $issuedAt = new DateTimeImmutable;
         $expiredAt = $issuedAt->add(RefreshToken::refreshTokensExpireIn());
         $tokenId = bin2hex(random_bytes(40));
 
@@ -28,8 +28,8 @@ trait HasRefreshTokens
             'expires_at' => $expiredAt,
         ]);
 
-        return (new JwtFacade())->issue(
-            new Sha256(),
+        return (new JwtFacade)->issue(
+            new Sha256,
             InMemory::plainText(RefreshToken::makeCryptKey('private')->getKeyContents()),
             function (Builder $builder) use ($expiredAt, $tokenId, $issuedAt) {
                 return $builder
