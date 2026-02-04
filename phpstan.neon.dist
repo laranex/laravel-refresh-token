@@ -10,6 +10,7 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
-    ignoreErrors:
-		- identifier: missingType.iterableValue
+	ignoreErrors:
+		-
+			identifier: missingType.iterableValue
 
