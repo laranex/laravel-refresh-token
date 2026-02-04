@@ -11,7 +11,7 @@ class PruneCommandTest extends TestCase
     use RefreshDatabase;
 
     /** @test */
-    public function it_can_prune_revoked_and_expired_tokens(): void
+    public function test_it_can_prune_revoked_and_expired_tokens(): void
     {
         $refreshTokenModel = RefreshToken::refreshTokenModel();
         $expiresAtArray = [now()->subDay(), now()->addDay()];
