@@ -15,6 +15,5 @@
     </testsuites>
     <php>
         <env name="CACHE_DRIVER" value="array"/>
-        <ini name="xdebug.mode" value="debug"/>
     </php>
 </phpunit>
