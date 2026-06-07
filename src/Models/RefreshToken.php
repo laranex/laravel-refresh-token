@@ -29,7 +29,6 @@ class RefreshToken extends Model
      */
     public function revoke(): bool
     {
-        /** @phpstan-ignore-next-line */
         return $this->update([
             'revoked' => true,
         ]);
@@ -45,6 +44,5 @@ class RefreshToken extends Model
             /** @phpstan-ignore-next-line */
             ->where('refreshable_type', $this->refreshable_type)
             ->update(['revoked' => true]);
-
     }
 }
