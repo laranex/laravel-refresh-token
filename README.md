@@ -152,8 +152,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
 
 ## Credits
-
-- [Nay Thu Khant](https://github.com/naythukhant)
+- [All Contributors](../../contributors)
 
 ## License
 
