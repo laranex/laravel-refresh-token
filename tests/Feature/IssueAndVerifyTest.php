@@ -12,6 +12,8 @@ use Lcobucci\JWT\Token\Parser;
 use Workbench\Database\Factories\UserFactory;
 
 it('issues a signed JWT and stores a matching refresh token row', function () {
+    $this->freezeTime();
+
     $user = UserFactory::new()->create();
 
     $jwt = $user->createRefreshToken();
@@ -106,6 +108,8 @@ it('rejects a token that is not yet valid', function () {
 });
 
 it('honors a custom expiry and keeps the DB row in sync', function () {
+    $this->freezeTime();
+
     RefreshToken::refreshTokensExpireIn(Carbon::now()->addDays(30));
 
     $user = UserFactory::new()->create();
