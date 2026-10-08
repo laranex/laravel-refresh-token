@@ -1,30 +1,43 @@
 <?php
 
-namespace Laranex\RefreshToken\Tests\Feature;
+declare(strict_types=1);
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 use Laranex\RefreshToken\RefreshToken;
-use Laranex\RefreshToken\Tests\TestCase;
+use Workbench\Database\Factories\UserFactory;
 
-class PruneCommandTest extends TestCase
-{
-    use RefreshDatabase;
+it('deletes expired and revoked tokens and keeps the valid ones', function () {
+    RefreshTokenModel::factory()->count(4)->create();
+    RefreshTokenModel::factory()->count(3)->expired()->create();
+    RefreshTokenModel::factory()->count(2)->revoked()->create();
 
-    /** @test */
-    public function test_it_can_prune_revoked_and_expired_tokens(): void
-    {
-        $refreshTokenModel = RefreshToken::refreshTokenModel();
-        $expiresAtArray = [now()->subDay(), now()->addDay()];
-        $revokedArray = [true, false];
+    $this->artisan('refresh-token:prune')
+        ->expectsOutput('Pruned 5 refresh token(s).')
+        ->assertExitCode(0);
 
-        $refreshTokenModel::factory()->count(500)->create([
-            'revoked' => $revokedArray[array_rand($revokedArray)],
-            'expires_at' => $expiresAtArray[array_rand($expiresAtArray)],
-        ]);
+    expect(RefreshTokenModel::query()->count())->toBe(4)
+        ->and(RefreshTokenModel::query()->where('revoked', true)->count())->toBe(0)
+        ->and(RefreshTokenModel::query()->where('expires_at', '<', now())->count())->toBe(0);
+});
 
-        $this->artisan('refresh-token:prune');
+it('keeps tokens that are still valid for the trait user', function () {
+    $user = UserFactory::new()->create();
+    $jwt = $user->createRefreshToken();
+    $user->createRefreshToken();
+    RefreshToken::tokenable($user->createRefreshToken())->revoke();
 
-        $invalidTokenCount = $refreshTokenModel::where('revoked', true)->orWhere('expires_at', '<', now())->count();
-        $this->assertEquals(0, $invalidTokenCount);
-    }
-}
+    $this->artisan('refresh-token:prune')->assertExitCode(0);
+
+    expect($user->refreshTokens()->count())->toBe(2)
+        ->and(RefreshToken::tokenable($jwt))->toBeInstanceOf(RefreshTokenModel::class);
+});
+
+it('prunes nothing when every token is valid', function () {
+    RefreshTokenModel::factory()->count(2)->create();
+
+    $this->artisan('refresh-token:prune')
+        ->expectsOutput('Pruned 0 refresh token(s).')
+        ->assertExitCode(0);
+
+    expect(RefreshTokenModel::query()->count())->toBe(2);
+});

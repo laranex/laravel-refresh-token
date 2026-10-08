@@ -1,157 +1,97 @@
 # Laravel Refresh Token
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
+[![Tests](https://img.shields.io/github/actions/workflow/status/laranex/laravel-refresh-token/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/laranex/laravel-refresh-token/actions/workflows/tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
-[![run-tests](https://github.com/laranex/laravel-refresh-token/actions/workflows/run-tests.yml/badge.svg)](https://github.com/laranex/laravel-refresh-token/actions/workflows/run-tests.yml)
+[![License](https://img.shields.io/packagist/l/laranex/laravel-refresh-token.svg?style=flat-square)](LICENSE.md)
 
-A package to help you implement refresh token mechanism in your laravel application
+Issue, verify, revoke and prune long-lived refresh tokens for any Eloquent model. Tokens are RS256-signed JWTs backed by a database row, so they can be checked offline by signature and still be revoked one by one or all at once. It is meant for Laravel APIs that hand out short-lived access tokens (Sanctum, Passport, your own JWTs) and need a safe way to renew them.
+
+## Documentation
+
+Full documentation lives at **[laranex.vercel.app/laravel-refresh-token](https://laranex.vercel.app/laravel-refresh-token)**.
+
+## Requirements
+
+- PHP 8.1 or higher
+- Laravel 10, 11, 12 or 13
 
 ## Installation
 
-You can install the package via composer:
+```bash
+composer require laranex/laravel-refresh-token
+```
+
+Generate the RSA key pair (written to `storage/refresh-token-private.key` and `storage/refresh-token-public.key`) and run the migration, which the package loads automatically:
 
 ```bash
-  composer require laranex/laravel-refresh-token
+php artisan refresh-token:keys
+php artisan migrate
 ```
 
-Generate encryption keys
-```bash
-  php artisan refresh-token:keys
-```
-
-Run The migration file
+Optionally publish the config (`private_key`, `public_key`, `table`) or the migration:
 
 ```bash
-  php artisan migrate
+php artisan vendor:publish --tag="refresh-token-config"
+php artisan vendor:publish --tag="refresh-token-migrations"
 ```
 
-You can publish the config file with:
-
-```bash
-  php artisan vendor:publish --tag="refresh-token-config"
-```
-
-This is the contents of the published config file:
-
-```php
-    return [
-    
-        /*
-        |--------------------------------------------------------------------------
-        | Encryption Keys
-        |--------------------------------------------------------------------------
-        |
-        | Refresh Token uses encryption keys while generating secure access tokens for
-        | your application. By default, the keys are stored as local files but
-        | can be set via environment variables when that is more convenient.
-        |
-        */
-        'private_key' => env('REFRESH_TOKEN_PRIVATE_KEY'),
-    
-        'public_key' => env('REFRESH_TOKEN_PUBLIC_KEY'),
-    
-        /*
-        |--------------------------------------------------------------------------
-        | Refresh Token Model
-        |--------------------------------------------------------------------------
-        |
-        | Refresh Token Model to manage refresh tokens
-        |
-        */
-        'model' => RefreshToken::class,
-    
-        /*
-        |--------------------------------------------------------------------------
-        | Refresh Token Table
-        |--------------------------------------------------------------------------
-        |
-        | Refresh Token Model to manage refresh tokens
-        |
-        */
-        'table' => 'laravel_refresh_tokens',
-    ];
-```
-
-## Overriding the default values (Optional)
-
-The following static methods are available under the `Laranex\RefreshToken\RefreshToken` class to override the default values. Invoking them 
-with the value you want in the service provider will override the default values.
-
-- `useRefreshTokenModel(string $refreshTokenModel): void` 
-- `loadKeysFrom(string $path): void` 
-- `refreshTokensExpireIn(DateTimeInterface $date = null): DateInterval|static`
-
+In production you may set `REFRESH_TOKEN_PRIVATE_KEY` and `REFRESH_TOKEN_PUBLIC_KEY` to the PEM contents instead of shipping key files.
 
 ## Usage
-- Use the trait in your refresh tokenable model
 
 ```php
-    class User extends Authenticatable{
-        use HasRefreshTokens;
-    
-    }
+use Laranex\RefreshToken\Concerns\HasRefreshTokens;
+use Laranex\RefreshToken\RefreshToken;
+
+class User extends Authenticatable
+{
+    use HasRefreshTokens;
+}
+
+// Issue: returns a signed JWT (valid for one year by default)
+$refreshToken = $user->createRefreshToken();
+
+// Verify: returns the token model, or null when it is invalid, expired or revoked
+$token = RefreshToken::tokenable($request->input('refresh_token'));
+
+if ($token === null) {
+    abort(401);
+}
+
+$user = $token->instance;   // the model the token was issued for
+$token->revoke();           // rotate: revoke this token...
+$token->revokeAll();        // ...or every token of this user
+
+// Optional, e.g. in AppServiceProvider::boot()
+RefreshToken::refreshTokensExpireIn(now()->addDays(30));
+RefreshToken::useRefreshTokenModel(MyRefreshToken::class);
+RefreshToken::loadKeysFrom(base_path('secrets'));
 ```
 
-- ### Create a refresh token
-```php
-    $user = Auth::user()->createRefreshToken();
+Delete expired and revoked tokens on a schedule with `Schedule::command('refresh-token:prune')->daily();`.
+
+## Testing
+
+```bash
+composer test
 ```
 
-- ### Verify a refresh token
-    - a token instance will be return if the token is valid, or else null will be return
-```php
-    $verifiedToken = Laranex\RefreshToken\RefreshToken::tokenable($request->get('refresh_token'));
-    if ($verifiedToken) {
-    // Implement your access token logic here
-    
-    } else {
-    // handle invalid refresh token
-    }
-```
-
-- ### Working with verified refresh token
-    ```php
-        $verifiedToken = Laranex\RefreshToken\RefreshToken::tokenable($request->get('refresh_token'));
-    ```
-    - You can access the token instance by calling the `instance` property, The instance property will return the model instance that you use the RefreshToken trait in
-        ```php
-            $tokenInstance = $verifiedToken->instance;
-        ```
-  
-    - Revoking the refresh token (The token will no longer be valid)
-      ```php
-          $verifiedToken->revoke();
-      ```
-    - Revoking all refresh tokens which are related to current refresh token instance
-      ```php
-          $verifiedToken->revokeAll();
-      ```
-    
-
-## Prune Command
-- You can use the prune command to delete all expired refresh tokens
-    ```bash
-        php artisan refresh-token:prune
-    ```
-- Or you can put this into a scheduler to run it periodically
-    ```php
-        $schedule->command('refresh-token:prune')->daily();
-    ```
-
-    
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
 
 ## Credits
+
+- [Nay Thu Khant](https://github.com/NayThuKhant)
 - [All Contributors](../../contributors)
 
 ## License

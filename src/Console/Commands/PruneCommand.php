@@ -1,8 +1,11 @@
 <?php
 
-namespace Laranex\RefreshToken\Commands;
+declare(strict_types=1);
+
+namespace Laranex\RefreshToken\Console\Commands;
 
 use Illuminate\Console\Command;
+use Laranex\RefreshToken\Clock;
 use Laranex\RefreshToken\RefreshToken;
 
 class PruneCommand extends Command
@@ -19,17 +22,20 @@ class PruneCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Delete all expired or revoked refresh tokens.';
+    protected $description = 'Delete all expired or revoked refresh tokens';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        RefreshToken::refreshTokenModel()::where('expires_at', '<', now())
+        $pruned = RefreshToken::refreshTokenModel()::query()
+            ->where('expires_at', '<', (new Clock)->now())
             ->orWhere('revoked', true)
             ->delete();
 
-        return 0;
+        $this->info(sprintf('Pruned %d refresh token(s).', $pruned));
+
+        return self::SUCCESS;
     }
 }
