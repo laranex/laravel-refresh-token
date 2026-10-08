@@ -71,6 +71,13 @@ RefreshToken::loadKeysFrom(base_path('secrets'));
 
 Delete expired and revoked tokens on a schedule with `Schedule::command('refresh-token:prune')->daily();`.
 
+## Built for humans and AI agents
+
+The documentation is written for developers, and the package ships an agent skill so AI coding agents use it the way it's meant to be used.
+
+- **Laravel Boost** installs the skill automatically: run `php artisan boost:install` (or `boost:update`).
+- **Any other agent** (Claude Code, Codex, Cursor and others): `npx skills add laranex/laravel-refresh-token`.
+
 ## Testing
 
 ```bash
