@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laranex/laravel-refresh-token",
-    "description": "Issue, verify, revoke and prune RS256 JWT refresh tokens for any Eloquent model in a Laravel application",
+    "description": "Refresh tokens for Laravel: issue, verify, revoke and prune RS256 JWT refresh tokens for any Eloquent model.",
     "keywords": [
         "laravel",
         "laranex",

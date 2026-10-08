@@ -5,7 +5,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
 [![License](https://img.shields.io/packagist/l/laranex/laravel-refresh-token.svg?style=flat-square)](LICENSE.md)
 
-Laravel Refresh Token issues, verifies, revokes and prunes long-lived RS256 JWT refresh tokens for any Eloquent model, so APIs that hand out short-lived access tokens can renew them safely. Built for humans and AI agents.
+Refresh tokens for Laravel: issue, verify, revoke and prune RS256 JWT refresh tokens for any Eloquent model. Built for humans and AI agents.
 
 ## Documentation
 
