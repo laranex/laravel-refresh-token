@@ -1,19 +1,96 @@
 <?php
 
-namespace Laranex\RefreshToken\Tests\Feature;
+declare(strict_types=1);
 
+use Laranex\RefreshToken\Exceptions\MissingKeyException;
+use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
+use Laranex\RefreshToken\RefreshToken;
 use Laranex\RefreshToken\Tests\TestCase;
+use Workbench\Database\Factories\UserFactory;
 
-class KeysCommandTest extends TestCase
-{
-    /** @test */
-    public function test_it_can_create_public_and_private_key_files(): void
-    {
-        if (($code = $this->artisan('refresh-token:keys')->execute()) !== 0) {
-            $code = $this->artisan('refresh-token:keys --force')->execute();
-        }
+beforeEach(function () {
+    // Make the command and the verifier read the key files instead of the inline test keys.
+    config()->set('refresh-token.private_key', null);
+    config()->set('refresh-token.public_key', null);
 
-        $this->assertEquals(0, $code);
-        $this->assertFileExists(storage_path('refresh-token-public.key'), storage_path('refresh-token-private.key'));
-    }
-}
+    $this->keyDirectory = $this->temporaryKeyDirectory();
+    RefreshToken::loadKeysFrom($this->keyDirectory);
+});
+
+it('writes a key pair the issuer and verifier both read', function () {
+    $this->artisan('refresh-token:keys', ['--length' => 2048])
+        ->expectsOutput('Encryption keys generated successfully.')
+        ->assertExitCode(0);
+
+    $publicKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-public.key';
+    $privateKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-private.key';
+
+    expect($publicKey)->toBeFile()
+        ->and($privateKey)->toBeFile()
+        ->and(file_get_contents($publicKey))->toStartWith('-----BEGIN PUBLIC KEY-----')
+        ->and(file_get_contents($privateKey))->toStartWith('-----BEGIN PRIVATE KEY-----')
+        ->and(RefreshToken::keyContents('public'))->toBe(file_get_contents($publicKey))
+        ->and(RefreshToken::keyContents('private'))->toBe(file_get_contents($privateKey));
+
+    $user = UserFactory::new()->create();
+
+    expect(RefreshToken::tokenable($user->createRefreshToken()))->toBeInstanceOf(RefreshTokenModel::class);
+});
+
+it('refuses to overwrite existing keys unless forced', function () {
+    $this->artisan('refresh-token:keys', ['--length' => 2048])->assertExitCode(0);
+
+    $privateKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-private.key';
+    $original = file_get_contents($privateKey);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048])
+        ->expectsOutput('Encryption keys already exist. Use the --force option to overwrite them.')
+        ->assertExitCode(1);
+
+    expect(file_get_contents($privateKey))->toBe($original);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048, '--force' => true])->assertExitCode(0);
+
+    expect(file_get_contents($privateKey))->not->toBe($original);
+});
+
+it('rejects key lengths below 2048 bits', function () {
+    $this->artisan('refresh-token:keys', ['--length' => 1024])
+        ->expectsOutput('The key length must be at least 2048 bits.')
+        ->assertExitCode(1);
+
+    expect(glob($this->keyDirectory.DIRECTORY_SEPARATOR.'*'))->toBe([]);
+});
+
+it('stores keys in the storage path by default', function () {
+    RefreshToken::$keyPath = null;
+
+    expect(RefreshToken::keyPath('refresh-token-public.key'))->toBe(storage_path('refresh-token-public.key'))
+        ->and(RefreshToken::keyPath('/refresh-token-public.key'))->toBe(storage_path('refresh-token-public.key'));
+
+    RefreshToken::loadKeysFrom('/custom/keys/');
+
+    expect(RefreshToken::keyPath('refresh-token-public.key'))->toBe('/custom/keys'.DIRECTORY_SEPARATOR.'refresh-token-public.key');
+});
+
+it('tells the developer how to fix a missing key', function () {
+    RefreshToken::keyContents('private');
+})->throws(MissingKeyException::class, 'php artisan refresh-token:keys');
+
+it('verifying without a public key fails loudly instead of returning null', function () {
+    RefreshToken::tokenable('a.b.c');
+})->throws(MissingKeyException::class, 'REFRESH_TOKEN_PUBLIC_KEY');
+
+it('prefers inline keys from the config and expands escaped newlines', function () {
+    $keys = TestCase::generateKeyPair();
+
+    config()->set('refresh-token.private_key', str_replace("\n", '\n', $keys['private']));
+    config()->set('refresh-token.public_key', str_replace("\n", '\n', $keys['public']));
+
+    expect(RefreshToken::keyContents('private'))->toBe($keys['private'])
+        ->and(RefreshToken::keyContents('public'))->toBe($keys['public']);
+
+    $user = UserFactory::new()->create();
+
+    expect(RefreshToken::tokenable($user->createRefreshToken()))->toBeInstanceOf(RefreshTokenModel::class);
+});

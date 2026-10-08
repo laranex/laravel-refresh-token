@@ -1,23 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laranex\RefreshToken;
 
-use Laranex\RefreshToken\Commands\KeysCommand;
-use Laranex\RefreshToken\Commands\PruneCommand;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Illuminate\Support\ServiceProvider;
+use Laranex\RefreshToken\Console\Commands\KeysCommand;
+use Laranex\RefreshToken\Console\Commands\PruneCommand;
 
-class RefreshTokenServiceProvider extends PackageServiceProvider
+class RefreshTokenServiceProvider extends ServiceProvider
 {
-    public function configurePackage(Package $package): void
+    /**
+     * Register any application services.
+     */
+    public function register(): void
     {
-        $package
-            ->name('laravel-refresh-token')
-            ->hasConfigFile()
-            ->hasCommands([KeysCommand::class, PruneCommand::class])
-            ->hasMigration('create_laravel_refresh_tokens_table')
-            ->runsMigrations();
+        $this->mergeConfigFrom(__DIR__.'/../config/refresh-token.php', 'refresh-token');
+    }
 
-        RefreshToken::loadKeysFrom(storage_path());
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->publishes([
+            __DIR__.'/../config/refresh-token.php' => $this->app->configPath('refresh-token.php'),
+        ], ['refresh-token', 'refresh-token-config']);
+
+        $this->publishes([
+            __DIR__.'/../database/migrations/create_laravel_refresh_tokens_table.php' => $this->migrationTarget(),
+        ], ['refresh-token', 'refresh-token-migrations']);
+
+        $this->commands([
+            KeysCommand::class,
+            PruneCommand::class,
+        ]);
+    }
+
+    /**
+     * Reuse an already published copy of the migration instead of publishing a second one.
+     */
+    private function migrationTarget(): string
+    {
+        $existing = glob($this->app->databasePath('migrations/*_create_laravel_refresh_tokens_table.php'));
+
+        if (is_array($existing) && $existing !== []) {
+            return $existing[0];
+        }
+
+        return $this->app->databasePath('migrations/'.date('Y_m_d_His').'_create_laravel_refresh_tokens_table.php');
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -7,11 +9,14 @@ return [
     | Encryption Keys
     |--------------------------------------------------------------------------
     |
-    | Refresh Token uses encryption keys while generating secure access tokens for
-    | your application. By default, the keys are stored as local files but
-    | can be set via environment variables when that is more convenient.
+    | Refresh tokens are RS256 JWTs signed with an RSA key pair. By default the
+    | keys are read from `refresh-token-private.key` and `refresh-token-public.key`
+    | in the storage path (generate them with `php artisan refresh-token:keys`),
+    | but the PEM contents may also be provided through environment variables
+    | when that is more convenient. Literal "\n" sequences are expanded.
     |
     */
+
     'private_key' => env('REFRESH_TOKEN_PRIVATE_KEY'),
 
     'public_key' => env('REFRESH_TOKEN_PUBLIC_KEY'),
@@ -21,8 +26,10 @@ return [
     | Refresh Token Table
     |--------------------------------------------------------------------------
     |
-    | Refresh Token Model to manage refresh tokens
+    | The database table that stores issued refresh tokens.
     |
     */
+
     'table' => 'laravel_refresh_tokens',
+
 ];

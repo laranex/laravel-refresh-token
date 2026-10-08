@@ -1,14 +1,17 @@
 {
+    "$schema": "https://getcomposer.org/schema.json",
     "name": "laranex/laravel-refresh-token",
-    "description": "A package to help you implement refresh token mechanism in your laravel application",
+    "description": "Issue, verify, revoke and prune RS256 JWT refresh tokens for any Eloquent model in a Laravel application",
     "keywords": [
-        "laranex",
         "laravel",
+        "laranex",
         "laravel-refresh-token",
-        "laravel-refresh-token-package",
-        "refresh-token"
+        "refresh-token",
+        "jwt",
+        "authentication",
+        "api"
     ],
-    "homepage": "https://github.com/laranex/laravel-refresh-token",
+    "homepage": "https://laranex.vercel.app/laravel-refresh-token",
     "license": "MIT",
     "authors": [
         {
@@ -18,48 +21,77 @@
         }
     ],
     "require": {
-        "php": "^8.1 | ^8.2 | ^8.3 | ^8.4",
-        "spatie/laravel-package-tools": "^1.14.0",
-        "lcobucci/jwt": "^4.3|^5.0",
-        "lcobucci/clock": "^2.2 || ^3.0",
-        "phpseclib/phpseclib": "^3.0",
-        "league/oauth2-server": "7.* | ^8.5.1 | ^9.0",
-        "nesbot/carbon" : "^2.67 | ^3.0"
+        "php": "^8.1",
+        "ext-openssl": "*",
+        "illuminate/console": "^10.0||^11.0||^12.0||^13.0",
+        "illuminate/contracts": "^10.0||^11.0||^12.0||^13.0",
+        "illuminate/database": "^10.0||^11.0||^12.0||^13.0",
+        "illuminate/support": "^10.0||^11.0||^12.0||^13.0",
+        "lcobucci/jwt": "^5.0",
+        "psr/clock": "^1.0"
     },
     "require-dev": {
-        "larastan/larastan": "^1.0 | ^2.11 | ^3.0",
-        "laravel/pint": "^1.0",
-        "nunomaduro/collision": "^6.4 | ^7.0 | ^8.0",
-        "orchestra/testbench": "^7.0 | ^8.0 | ^9.0 | ^10.0 | ^11.0",
-        "phpstan/extension-installer": "^1.1 | ^2.0",
-        "phpstan/phpstan-deprecation-rules": "^1.0 | ^2.0",
-        "phpstan/phpstan-phpunit": "^1.0 | ^2.0",
-        "phpunit/phpunit": "^9.4 | ^10.0 | ^11.0 | ^12.0 | ^13.0"
+        "larastan/larastan": "^2.9.14||^3.9",
+        "laravel/pint": "^1.20||^1.29",
+        "orchestra/testbench": "^8.0||^9.0||^10.0||^11.0",
+        "pestphp/pest": "^2.36||^3.0||^4.6",
+        "pestphp/pest-plugin-type-coverage": "^2.8.7||^3.0||^4.0",
+        "phpstan/extension-installer": "^1.4"
     },
     "autoload": {
         "psr-4": {
-            "Laranex\\RefreshToken\\": "src/"
+            "Laranex\\RefreshToken\\": "src/",
+            "Laranex\\RefreshToken\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Laranex\\RefreshToken\\Tests\\": "tests/",
-            "Laranex\\RefreshToken\\Database\\Factories\\": "database/factories/"
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "scripts": {
-        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse",
-        "test": "phpunit",
-        "test-coverage": "phpunit --coverage",
-        "format": "vendor/bin/pint"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "phpstan/extension-installer": true,
-            "pestphp/pest-plugin": false
-        }
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "prepare": [
+            "@php vendor/bin/testbench package:discover --ansi"
+        ],
+        "build": [
+            "@php vendor/bin/testbench workbench:build --ansi"
+        ],
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "lint": [
+            "vendor/bin/pint"
+        ],
+        "lint:check": [
+            "vendor/bin/pint --test"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse --memory-limit=1G"
+        ],
+        "test:types": [
+            "@php -d memory_limit=-1 vendor/bin/pest --type-coverage --min=100"
+        ],
+        "test:unit": [
+            "vendor/bin/pest --parallel"
+        ],
+        "test": [
+            "@analyse",
+            "@lint:check",
+            "@test:types",
+            "@test:unit"
+        ],
+        "clear": [
+            "@php vendor/bin/testbench package:purge-skeleton --ansi"
+        ]
     },
     "extra": {
         "laravel": {
@@ -71,6 +103,24 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true,
+            "php-http/discovery": true
+        },
+        "policy": {
+            "advisories": {
+                "ignore": {
+                    "laravel/framework": "Dev-only: the package's test matrix installs older Laravel lines; apps resolve their own framework version"
+                },
+                "ignore-id": {
+                    "PKSA-z3gr-8qht-p93v": "Dev-only PHPUnit advisory; needed for the PHP 8.1 test lane"
+                }
+            }
+        }
+    },
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

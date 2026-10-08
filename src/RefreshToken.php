@@ -1,40 +1,53 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laranex\RefreshToken;
 
-use Carbon\Carbon;
 use DateInterval;
 use DateTimeInterface;
-use DateTimeZone;
-use Illuminate\Config\Repository as Config;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
+use Laranex\RefreshToken\Exceptions\MissingKeyException;
 use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
-use Lcobucci\Clock\SystemClock;
+use Lcobucci\JWT\Exception as JwtException;
 use Lcobucci\JWT\JwtFacade;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Lcobucci\JWT\Validation\Constraint;
-use League\OAuth2\Server\CryptKey;
-use Throwable;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
+use Lcobucci\JWT\Validation\Constraint\StrictValidAt;
 
 class RefreshToken
 {
     /**
+     * Final so that `new static` in the fluent setters is always safe.
+     */
+    final public function __construct()
+    {
+        //
+    }
+
+    /**
      * The refresh token model class name.
+     *
+     * @var class-string<RefreshTokenModel>
      */
     public static string $refreshTokenModel = RefreshTokenModel::class;
 
     /**
-     * The date when refresh tokens expire.
+     * How long a freshly issued refresh token stays valid. Defaults to one year.
      */
-    public static ?DateInterval $refreshTokensExpireIn;
+    public static ?DateInterval $refreshTokensExpireIn = null;
 
     /**
-     * The storage location of the encryption keys.
+     * The storage location of the encryption keys. Defaults to the application's storage path.
      */
-    public static string $keyPath;
+    public static ?string $keyPath = null;
 
     /**
      * Set the refresh token model class name.
+     *
+     * @param  class-string<RefreshTokenModel>  $refreshTokenModel
      */
     public static function useRefreshTokenModel(string $refreshTokenModel): void
     {
@@ -43,6 +56,8 @@ class RefreshToken
 
     /**
      * Get the refresh token model class name.
+     *
+     * @return class-string<RefreshTokenModel>
      */
     public static function refreshTokenModel(): string
     {
@@ -51,38 +66,52 @@ class RefreshToken
 
     /**
      * Get or set when refresh tokens expire.
+     *
+     * Pass a date to make every token issued from now on expire after the same
+     * amount of time that separates that date from the current moment.
+     *
+     * @return ($date is null ? DateInterval : static)
      */
     public static function refreshTokensExpireIn(?DateTimeInterface $date = null): DateInterval|static
     {
-        if (is_null($date)) {
+        if ($date === null) {
             return static::$refreshTokensExpireIn ?? new DateInterval('P1Y');
         }
 
-        static::$refreshTokensExpireIn = Carbon::now()->diff($date);
+        static::$refreshTokensExpireIn = (new Clock)->now()->diff($date);
 
-        /** @phpstan-ignore-next-line */
         return new static;
     }
 
     /**
-     * Get the refresh token instance for the given JWT.
+     * Get the refresh token instance for the given JWT, or null when it is invalid, expired or revoked.
      */
     public static function tokenable(string $jwtToken): ?RefreshTokenModel
     {
+        if ($jwtToken === '') {
+            return null;
+        }
+
         try {
             $verifiedToken = (new JwtFacade)->parse(
                 $jwtToken,
-                new Constraint\SignedWith(new Sha256, InMemory::plainText(self::makeCryptKey('public')->getKeyContents())),
-                new Constraint\StrictValidAt(
-                    new SystemClock(new DateTimeZone(date_default_timezone_get()))
-                ),
+                new SignedWith(new Sha256, InMemory::plainText(static::keyContents('public'))),
+                new StrictValidAt(new Clock),
             );
-
-            return static::refreshTokenModel()::where('revoked', false)
-                ->find($verifiedToken->claims()->get('jti'));
-        } catch (Throwable $_) {
+        } catch (JwtException) {
             return null;
         }
+
+        $tokenId = $verifiedToken->claims()->get('jti');
+
+        if (! is_string($tokenId) || $tokenId === '') {
+            return null;
+        }
+
+        return static::refreshTokenModel()::query()
+            ->where('revoked', false)
+            ->whereKey($tokenId)
+            ->first();
     }
 
     /**
@@ -94,28 +123,45 @@ class RefreshToken
     }
 
     /**
-     * The location of the encryption keys.
+     * The location of the given encryption key file.
      */
     public static function keyPath(string $file): string
     {
         $file = ltrim($file, '/\\');
 
-        return static::$keyPath
+        return static::$keyPath !== null && static::$keyPath !== ''
             ? rtrim(static::$keyPath, '/\\').DIRECTORY_SEPARATOR.$file
-            : storage_path($file);
+            : App::storagePath($file);
     }
 
     /**
-     * Create a CryptKey instance without permissions check.
+     * Get the PEM contents of the "public" or "private" key.
+     *
+     * The key is read from the `refresh-token.<type>_key` config value when it is
+     * set, otherwise from the `refresh-token-<type>.key` file in the key path.
+     *
+     * @return non-empty-string
+     *
+     * @throws MissingKeyException
      */
-    public static function makeCryptKey(string $type): CryptKey
+    public static function keyContents(string $type): string
     {
-        $key = str_replace('\\n', '\n', app()->make(Config::class)->get('refresh-token.'.$type.'_key') ?? '');
+        $configured = Config::get('refresh-token.'.$type.'_key');
 
-        if (! $key) {
-            $key = 'file://'.RefreshToken::keyPath('oauth-'.$type.'.key');
+        $configured = is_string($configured) ? str_replace('\\n', "\n", $configured) : '';
+
+        if ($configured !== '' && trim($configured) !== '') {
+            return $configured;
         }
 
-        return new CryptKey($key, null, false);
+        $path = static::keyPath('refresh-token-'.$type.'.key');
+
+        $contents = is_file($path) ? (string) file_get_contents($path) : '';
+
+        if ($contents !== '' && trim($contents) !== '') {
+            return $contents;
+        }
+
+        throw MissingKeyException::forFile($type, $path);
     }
 }

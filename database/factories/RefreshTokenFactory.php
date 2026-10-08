@@ -1,28 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Laranex\RefreshToken\Database\Factories;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Collection;
-use Laranex\RefreshToken\RefreshToken;
+use Laranex\RefreshToken\Clock;
+use Laranex\RefreshToken\Models\RefreshToken;
 
+/**
+ * @extends Factory<RefreshToken>
+ */
 class RefreshTokenFactory extends Factory
 {
-    public function __construct($count = null, ?Collection $states = null, ?Collection $has = null, ?Collection $for = null, ?Collection $afterMaking = null, ?Collection $afterCreating = null, $connection = null, ?Collection $recycle = null)
-    {
-        parent::__construct($count, $states, $has, $for, $afterMaking, $afterCreating, $connection, $recycle);
-        $this->model = RefreshToken::refreshTokenModel();
-    }
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var class-string<RefreshToken>
+     */
+    protected $model = RefreshToken::class;
 
+    /**
+     * Define the model's default state: a valid token for a generic user.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
+        $now = (new Clock)->now();
+
         return [
             'id' => bin2hex(random_bytes(40)),
-            'refreshable_id' => $this->faker->uuid(),
+            'refreshable_id' => (string) $this->faker->randomNumber(5, true),
             'refreshable_type' => 'App\Models\User',
-            'created_at' => Carbon::now(),
-            'expires_at' => Carbon::now()->subYear(),
+            'revoked' => false,
+            'created_at' => $now,
+            'expires_at' => $now->add(\Laranex\RefreshToken\RefreshToken::refreshTokensExpireIn()),
         ];
+    }
+
+    /**
+     * Indicate that the token has expired.
+     */
+    public function expired(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'expires_at' => (new Clock)->now()->modify('-1 day'),
+        ]);
+    }
+
+    /**
+     * Indicate that the token has been revoked.
+     */
+    public function revoked(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'revoked' => true,
+        ]);
     }
 }
