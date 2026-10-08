@@ -35,6 +35,7 @@ trait HasRefreshTokens
 
         $issuedAt = (new Clock)->now();
         $expiresAt = $issuedAt->add(RefreshToken::refreshTokensExpireIn());
+        /** @var non-empty-string $tokenId */
         $tokenId = bin2hex(random_bytes(40));
 
         RefreshToken::refreshTokenModel()::query()->create([

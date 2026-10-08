@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laranex\RefreshToken;
 
 use DateInterval;
+use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -78,7 +79,8 @@ class RefreshToken
             return static::$refreshTokensExpireIn ?? new DateInterval('P1Y');
         }
 
-        static::$refreshTokensExpireIn = (new Clock)->now()->diff($date);
+        // Diff as plain PHP dates: some Carbon 3 releases return an interval whose `days` is false.
+        static::$refreshTokensExpireIn = DateTimeImmutable::createFromInterface((new Clock)->now())->diff($date);
 
         return new static;
     }
