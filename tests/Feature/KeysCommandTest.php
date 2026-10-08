@@ -62,6 +62,58 @@ it('rejects key lengths below 2048 bits', function () {
     expect(glob($this->keyDirectory.DIRECTORY_SEPARATOR.'*'))->toBe([]);
 });
 
+it('creates a missing key directory', function () {
+    $directory = $this->keyDirectory.DIRECTORY_SEPARATOR.'nested'.DIRECTORY_SEPARATOR.'keys';
+    RefreshToken::loadKeysFrom($directory);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048])->assertExitCode(0);
+
+    expect($directory.DIRECTORY_SEPARATOR.'refresh-token-private.key')->toBeFile()
+        ->and($directory.DIRECTORY_SEPARATOR.'refresh-token-public.key')->toBeFile();
+
+    @unlink($directory.DIRECTORY_SEPARATOR.'refresh-token-private.key');
+    @unlink($directory.DIRECTORY_SEPARATOR.'refresh-token-public.key');
+    @rmdir($directory);
+    @rmdir(dirname($directory));
+});
+
+it('fails when the key directory cannot be created', function () {
+    $file = $this->keyDirectory.DIRECTORY_SEPARATOR.'not-a-directory';
+    file_put_contents($file, '');
+    RefreshToken::loadKeysFrom($file.DIRECTORY_SEPARATOR.'keys');
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048])
+        ->expectsOutput('Unable to create the key directory ['.$file.DIRECTORY_SEPARATOR.'keys].')
+        ->assertExitCode(1);
+});
+
+it('fails instead of reporting success when a key cannot be written', function () {
+    $privateKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-private.key';
+    mkdir($privateKey);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048, '--force' => true])
+        ->expectsOutput('Unable to write the private key to ['.$privateKey.'].')
+        ->doesntExpectOutput('Encryption keys generated successfully.')
+        ->assertExitCode(1);
+
+    expect($this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-public.key')->not->toBeFile();
+
+    rmdir($privateKey);
+});
+
+it('fails and removes the private key when the public key cannot be written', function () {
+    $publicKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-public.key';
+    mkdir($publicKey);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048, '--force' => true])
+        ->expectsOutput('Unable to write the public key to ['.$publicKey.'].')
+        ->assertExitCode(1);
+
+    expect($this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-private.key')->not->toBeFile();
+
+    rmdir($publicKey);
+});
+
 it('stores keys in the storage path by default', function () {
     RefreshToken::$keyPath = null;
 

@@ -19,7 +19,7 @@ Use this skill when a Laravel API needs long-lived refresh tokens to renew short
 
 ### 1. Set up keys and the table
 
-- `php artisan refresh-token:keys` writes `storage/refresh-token-private.key` and `storage/refresh-token-public.key` (`--force` to replace, `--length=4096` default, minimum 2048)
+- `php artisan refresh-token:keys` writes `storage/refresh-token-private.key` and `storage/refresh-token-public.key` (`--force` to replace, `--length=4096` default, minimum 2048); it creates a missing key directory and exits 1 if a key cannot be written
 - in production prefer `REFRESH_TOKEN_PRIVATE_KEY` / `REFRESH_TOKEN_PUBLIC_KEY` (PEM; `\n` sequences are expanded)
 - `php artisan migrate` creates `laravel_refresh_tokens` (the migration is loaded automatically); publish only to change it: `php artisan vendor:publish --tag="refresh-token-migrations"`
 - config keys are `private_key`, `public_key` and `table` only (`--tag="refresh-token-config"`)
@@ -40,6 +40,10 @@ Use this skill when a Laravel API needs long-lived refresh tokens to renew short
 ### 4. Prune
 
 - schedule `refresh-token:prune` daily to delete expired and revoked rows
+
+### 5. Test
+
+- `RefreshToken::factory()` (model `Laranex\RefreshToken\Models\RefreshToken`) has `expired()` / `revoked()` states; tokens default to the configured user model's morph class, use `->for($user, 'instance')` to attach one to a real model
 
 ## Rules, References, and Templates
 
