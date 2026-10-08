@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Laranex\RefreshToken\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Laranex\RefreshToken\Clock;
 use Laranex\RefreshToken\Models\RefreshToken;
 
@@ -21,7 +22,7 @@ class RefreshTokenFactory extends Factory
     protected $model = RefreshToken::class;
 
     /**
-     * Define the model's default state: a valid token for a generic user.
+     * Define the model's default state: a valid token for the application's user model.
      *
      * @return array<string, mixed>
      */
@@ -32,11 +33,26 @@ class RefreshTokenFactory extends Factory
         return [
             'id' => bin2hex(random_bytes(40)),
             'refreshable_id' => (string) $this->faker->randomNumber(5, true),
-            'refreshable_type' => 'App\Models\User',
+            'refreshable_type' => $this->userMorphClass(),
             'revoked' => false,
             'created_at' => $now,
             'expires_at' => $now->add(\Laranex\RefreshToken\RefreshToken::refreshTokensExpireIn()),
         ];
+    }
+
+    /**
+     * The morph class of the configured user model (`auth.providers.users.model`),
+     * so morph map aliases are respected; falls back to `App\Models\User`.
+     */
+    protected function userMorphClass(): string
+    {
+        $model = config('auth.providers.users.model');
+
+        if (is_string($model) && is_subclass_of($model, Model::class)) {
+            return (new $model)->getMorphClass();
+        }
+
+        return 'App\Models\User';
     }
 
     /**

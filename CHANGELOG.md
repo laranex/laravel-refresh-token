@@ -18,10 +18,12 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - A missing or empty key now throws `Laranex\RefreshToken\Exceptions\MissingKeyException` that names the expected file, instead of every token silently failing to verify.
 - Issuing a token for an unsaved model throws a `LogicException`.
 - `refresh-token:keys` refuses key lengths below 2048 bits and writes the private key with `0600` permissions; `refresh-token:prune` reports how many tokens it deleted.
+- `refresh-token:keys` creates the key directory if it is missing and exits with status 1 (instead of reporting success) when the directory or a key file cannot be written.
 - Tokens are stored with the model's morph class (`getMorphClass()`), so `Relation::morphMap()` aliases are respected.
 - The migration makes `id` the primary key and indexes `refreshable_type` + `refreshable_id`.
 - Added `HasRefreshTokens::refreshTokens()` (morph-many relation) and `expired()` / `revoked()` factory states.
-- The migration is published with `--tag="refresh-token-migrations"`; the config tag `refresh-token-config` is unchanged and `--tag="refresh-token"` publishes both.
+- New `--tag="refresh-token"` publishes the config and the migration together; the existing `refresh-token-config` and `refresh-token-migrations` tags are unchanged.
+- The factory's default `refreshable_type` is the morph class of the configured user model (`auth.providers.users.model`) instead of a hard-coded `App\Models\User`; use `->for($model, 'instance')` to attach factory tokens to a specific model.
 
 ### Fixed
 

@@ -60,9 +60,28 @@ class KeysCommand extends Command
             return self::FAILURE;
         }
 
-        file_put_contents($publicKey, $details['key']);
-        file_put_contents($privateKey, $privateKeyContents);
+        $directory = dirname($privateKey);
+
+        if (! is_dir($directory) && ! @mkdir($directory, 0755, true) && ! is_dir($directory)) {
+            $this->error("Unable to create the key directory [{$directory}].");
+
+            return self::FAILURE;
+        }
+
+        if (@file_put_contents($privateKey, $privateKeyContents) === false) {
+            $this->error("Unable to write the private key to [{$privateKey}].");
+
+            return self::FAILURE;
+        }
+
         @chmod($privateKey, 0600);
+
+        if (@file_put_contents($publicKey, $details['key']) === false) {
+            @unlink($privateKey);
+            $this->error("Unable to write the public key to [{$publicKey}].");
+
+            return self::FAILURE;
+        }
 
         $this->info('Encryption keys generated successfully.');
 
