@@ -105,7 +105,7 @@ it('rejects a token that is not yet valid', function () {
     expect(RefreshToken::tokenable($jwt))->toBeNull();
 });
 
-it('honours a custom expiry and keeps the DB row in sync', function () {
+it('honors a custom expiry and keeps the DB row in sync', function () {
     RefreshToken::refreshTokensExpireIn(Carbon::now()->addDays(30));
 
     $user = UserFactory::new()->create();

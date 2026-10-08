@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Psr\Clock\ClockInterface;
 
 /**
- * A PSR-20 clock backed by Laravel's Carbon, so token timestamps honour
+ * A PSR-20 clock backed by Laravel's Carbon, so token timestamps honor
  * `Carbon::setTestNow()` and the `travel()` test helpers.
  */
 final class Clock implements ClockInterface
