@@ -25,6 +25,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - Added `HasRefreshTokens::refreshTokens()` (morph-many relation) and `expired()` / `revoked()` factory states.
 - New `--tag="refresh-token"` publishes the config and the migration together; the existing `refresh-token-config` and `refresh-token-migrations` tags are unchanged.
 - The factory's default `refreshable_type` is the morph class of the configured user model (`auth.providers.users.model`) instead of a hard-coded `App\Models\User`; use `->for($model, 'instance')` to attach factory tokens to a specific model.
+- `RefreshTokenFactory` reads `auth.providers.users.model` through the `Config` facade instead of the `config()` helper, which only `laravel/framework` defines, so the package runs on the `illuminate/*` components it requires.
 
 ### Fixed
 
