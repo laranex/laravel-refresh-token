@@ -33,6 +33,8 @@ trait HasRefreshTokens
             throw new LogicException('A refresh token can only be issued for a model that has been saved.');
         }
 
+        // Read the key first so a missing key does not leave an orphaned row behind.
+        $privateKey = InMemory::plainText(RefreshToken::keyContents('private'));
         $issuedAt = (new Clock)->now();
         $expiresAt = $issuedAt->add(RefreshToken::refreshTokensExpireIn());
         /** @var non-empty-string $tokenId */
@@ -48,7 +50,7 @@ trait HasRefreshTokens
 
         return (new JwtFacade(clock: new Clock))->issue(
             new Sha256,
-            InMemory::plainText(RefreshToken::keyContents('private')),
+            $privateKey,
             fn (Builder $builder): Builder => $builder
                 ->issuedAt($issuedAt)
                 ->canOnlyBeUsedAfter($issuedAt)

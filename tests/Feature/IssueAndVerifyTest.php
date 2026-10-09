@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
+use Laranex\RefreshToken\Exceptions\MissingKeyException;
 use Laranex\RefreshToken\Facades\RefreshToken as RefreshTokenFacade;
 use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 use Laranex\RefreshToken\RefreshToken;
@@ -98,6 +99,15 @@ it('rejects an expired token', function () {
     expect(RefreshToken::tokenable($jwt))->toBeNull();
 });
 
+it('rejects a token whose stored row has expired even if the JWT has not', function () {
+    $user = UserFactory::new()->create();
+    $jwt = $user->createRefreshToken();
+
+    RefreshTokenModel::query()->update(['expires_at' => Carbon::now()->subSecond()]);
+
+    expect(RefreshToken::tokenable($jwt))->toBeNull();
+});
+
 it('rejects a token that is not yet valid', function () {
     $user = UserFactory::new()->create();
     $jwt = $user->createRefreshToken();
@@ -139,3 +149,13 @@ it('exposes the expiry interval and returns itself as a fluent setter', function
 it('refuses to issue a token for a model that has not been saved', function () {
     UserFactory::new()->make()->createRefreshToken();
 })->throws(LogicException::class, 'has been saved');
+
+it('does not store a token row when the private key is missing', function () {
+    $user = UserFactory::new()->create();
+
+    config()->set('refresh-token.private_key', null);
+    RefreshToken::loadKeysFrom($this->temporaryKeyDirectory());
+
+    expect(fn () => $user->createRefreshToken())->toThrow(MissingKeyException::class)
+        ->and(RefreshTokenModel::query()->count())->toBe(0);
+});
