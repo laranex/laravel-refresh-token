@@ -1,7 +1,7 @@
 # Laravel Refresh Token
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
-[![Tests](https://img.shields.io/github/actions/workflow/status/laranex/laravel-refresh-token/tests.yml?label=tests&style=flat-square)](https://github.com/laranex/laravel-refresh-token/actions/workflows/tests.yml)
+[![Tests](https://github.com/laranex/laravel-refresh-token/actions/workflows/tests.yml/badge.svg)](https://github.com/laranex/laravel-refresh-token/actions/workflows/tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/laranex/laravel-refresh-token.svg?style=flat-square)](https://packagist.org/packages/laranex/laravel-refresh-token)
 [![License](https://img.shields.io/packagist/l/laranex/laravel-refresh-token.svg?style=flat-square)](LICENSE.md)
 
