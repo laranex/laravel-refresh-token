@@ -6,6 +6,7 @@ namespace Laranex\RefreshToken\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Config;
 use Laranex\RefreshToken\Clock;
 use Laranex\RefreshToken\Models\RefreshToken;
 
@@ -46,7 +47,7 @@ class RefreshTokenFactory extends Factory
      */
     protected function userMorphClass(): string
     {
-        $model = config('auth.providers.users.model');
+        $model = Config::get('auth.providers.users.model');
 
         if (is_string($model) && is_subclass_of($model, Model::class)) {
             return (new $model)->getMorphClass();
