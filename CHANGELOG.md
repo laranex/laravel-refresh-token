@@ -17,6 +17,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - `RefreshToken::makeCryptKey()` (which returned a `league/oauth2-server` `CryptKey`) is replaced by `RefreshToken::keyContents('private'|'public')`, which returns the PEM string.
 - A missing or empty key now throws `Laranex\RefreshToken\Exceptions\MissingKeyException` that names the expected file, instead of every token silently failing to verify.
 - Issuing a token for an unsaved model throws a `LogicException`.
+- `RefreshToken::refreshTokensExpireIn()` throws an `InvalidArgumentException` when the date is not in the future. v1 accepted a past date, so every token issued afterward was already expired.
 - `refresh-token:keys` refuses key lengths below 2048 bits and writes the private key with `0600` permissions; `refresh-token:prune` reports how many tokens it deleted.
 - `refresh-token:keys` creates the key directory if it is missing and exits with status 1 (instead of reporting success) when the directory or a key file cannot be written.
 - Tokens are stored with the model's morph class (`getMorphClass()`), so `Relation::morphMap()` aliases are respected.
@@ -43,6 +44,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - If you generated keys with `refresh-token:keys`, they are now actually used. If you instead created `storage/oauth-private.key` and `storage/oauth-public.key` by hand (the names v1 read), rename them to `storage/refresh-token-private.key` and `storage/refresh-token-public.key`, or set `REFRESH_TOKEN_PRIVATE_KEY` / `REFRESH_TOKEN_PUBLIC_KEY`. Tokens issued before the rename keep verifying as long as the same key pair is used.
 - Remove any `model` key from a published `config/refresh-token.php`; it was never read. Call `RefreshToken::useRefreshTokenModel(YourModel::class)` in a service provider instead.
 - Replace calls to `RefreshToken::makeCryptKey($type)->getKeyContents()` with `RefreshToken::keyContents($type)`.
+- Pass a future date to `RefreshToken::refreshTokensExpireIn()`; a past date or the current moment now throws an `InvalidArgumentException`.
 - If your app uses a morph map, tokens issued by v1 stored the full class name; update `refreshable_type` in the refresh tokens table to the alias or revoke those tokens.
 - Existing tables keep working. To get the new primary key and index on an existing table, add them in a migration of your own (`$table->primary('id')` and `$table->index(['refreshable_type', 'refreshable_id'])`).
 
