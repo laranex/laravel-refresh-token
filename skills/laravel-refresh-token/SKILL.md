@@ -29,7 +29,7 @@ Requires PHP 8.1+ (with `openssl` and `sodium`) and Laravel 10 to 13. The servic
 - In production prefer `REFRESH_TOKEN_PRIVATE_KEY` and `REFRESH_TOKEN_PUBLIC_KEY` (PEM contents; literal `\n` sequences are expanded).
 - Load the key files from another folder with `RefreshToken::loadKeysFrom($path)` in a service provider.
 - The config keys are `private_key`, `public_key` and `table`. Publish only to change them: `php artisan vendor:publish --tag="refresh-token-config"`; `--tag="refresh-token-migrations"` publishes the migration.
-- Change the lifetime once in a service provider: `RefreshToken::refreshTokensExpireIn(now()->addDays(30))` (default one year).
+- Change the lifetime once in a service provider: `RefreshToken::refreshTokensExpireIn(now()->addDays(30))` (default one year). The date must be in the future; a past date or the current moment throws an `InvalidArgumentException`.
 - Use your own model by extending `Laranex\RefreshToken\Models\RefreshToken` and registering it with `RefreshToken::useRefreshTokenModel(MyRefreshToken::class)`.
 
 ## Use

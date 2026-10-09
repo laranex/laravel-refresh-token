@@ -146,6 +146,28 @@ it('exposes the expiry interval and returns itself as a fluent setter', function
         ->and(RefreshToken::refreshTokensExpireIn()->days)->toBe(0);
 });
 
+it('rejects an expiry date that is not in the future', function (string $offset) {
+    $this->freezeTime();
+
+    RefreshToken::refreshTokensExpireIn(Carbon::now()->addDays(30));
+
+    expect(fn () => RefreshToken::refreshTokensExpireIn(Carbon::now()->modify($offset)))
+        ->toThrow(InvalidArgumentException::class, 'Refresh tokens must expire in the future')
+        ->and(RefreshToken::refreshTokensExpireIn()->days)->toBe(30);
+})->with([
+    'in the past' => ['-1 second'],
+    'a year ago' => ['-1 year'],
+    'now' => ['+0 seconds'],
+]);
+
+it('accepts an expiry date one second in the future', function () {
+    $this->freezeTime();
+
+    RefreshToken::refreshTokensExpireIn(Carbon::now()->addSecond());
+
+    expect(RefreshToken::refreshTokensExpireIn()->s)->toBe(1);
+});
+
 it('refuses to issue a token for a model that has not been saved', function () {
     UserFactory::new()->make()->createRefreshToken();
 })->throws(LogicException::class, 'has been saved');

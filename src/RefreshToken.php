@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use InvalidArgumentException;
 use Laranex\RefreshToken\Exceptions\MissingKeyException;
 use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 use Lcobucci\JWT\Exception as JwtException;
@@ -72,6 +73,8 @@ class RefreshToken
      * amount of time that separates that date from the current moment.
      *
      * @return ($date is null ? DateInterval : static)
+     *
+     * @throws InvalidArgumentException when the date is not in the future
      */
     public static function refreshTokensExpireIn(?DateTimeInterface $date = null): DateInterval|static
     {
@@ -79,8 +82,18 @@ class RefreshToken
             return static::$refreshTokensExpireIn ?? new DateInterval('P1Y');
         }
 
+        $now = DateTimeImmutable::createFromInterface((new Clock)->now());
+
+        if ($date <= $now) {
+            throw new InvalidArgumentException(sprintf(
+                'Refresh tokens must expire in the future, but [%s] is not after the current time [%s]. Pass a future date, for example now()->addDays(30).',
+                $date->format(DateTimeInterface::ATOM),
+                $now->format(DateTimeInterface::ATOM),
+            ));
+        }
+
         // Diff as plain PHP dates: some Carbon 3 releases return an interval whose `days` is false.
-        static::$refreshTokensExpireIn = DateTimeImmutable::createFromInterface((new Clock)->now())->diff($date);
+        static::$refreshTokensExpireIn = $now->diff($date);
 
         return new static;
     }
