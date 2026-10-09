@@ -111,8 +111,9 @@ class RefreshToken
         }
 
         return static::refreshTokenModel()::query()
-            ->where('revoked', false)
             ->whereKey($tokenId)
+            ->where('revoked', false)
+            ->where('expires_at', '>', (new Clock)->now())
             ->first();
     }
 

@@ -68,13 +68,12 @@ class KeysCommand extends Command
             return self::FAILURE;
         }
 
-        if (@file_put_contents($privateKey, $privateKeyContents) === false) {
+        // Restrict the private key to its owner before its contents are written.
+        if (! $this->createPrivateFile($privateKey) || @file_put_contents($privateKey, $privateKeyContents) === false) {
             $this->error("Unable to write the private key to [{$privateKey}].");
 
             return self::FAILURE;
         }
-
-        @chmod($privateKey, 0600);
 
         if (@file_put_contents($publicKey, $details['key']) === false) {
             @unlink($privateKey);
@@ -86,5 +85,29 @@ class KeysCommand extends Command
         $this->info('Encryption keys generated successfully.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Create the file if needed and restrict it to its owner.
+     */
+    private function createPrivateFile(string $path): bool
+    {
+        if (is_dir($path)) {
+            return false;
+        }
+
+        $umask = umask(0077);
+
+        try {
+            if (@touch($path) === false) {
+                return false;
+            }
+        } finally {
+            umask($umask);
+        }
+
+        @chmod($path, 0600);
+
+        return true;
     }
 }

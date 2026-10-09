@@ -37,6 +37,19 @@ it('writes a key pair the issuer and verifier both read', function () {
     expect(RefreshToken::tokenable($user->createRefreshToken()))->toBeInstanceOf(RefreshTokenModel::class);
 });
 
+it('writes the private key readable by its owner only', function () {
+    $privateKey = $this->keyDirectory.DIRECTORY_SEPARATOR.'refresh-token-private.key';
+    file_put_contents($privateKey, 'old');
+    chmod($privateKey, 0644);
+
+    $this->artisan('refresh-token:keys', ['--length' => 2048, '--force' => true])->assertExitCode(0);
+
+    clearstatcache();
+
+    expect(fileperms($privateKey) & 0777)->toBe(0600)
+        ->and(file_get_contents($privateKey))->toStartWith('-----BEGIN PRIVATE KEY-----');
+})->skipOnWindows();
+
 it('refuses to overwrite existing keys unless forced', function () {
     $this->artisan('refresh-token:keys', ['--length' => 2048])->assertExitCode(0);
 

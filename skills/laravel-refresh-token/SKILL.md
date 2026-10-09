@@ -52,8 +52,10 @@ use Laranex\RefreshToken\RefreshToken;
 $token = RefreshToken::tokenable($request->string('refresh_token')->toString());
 abort_if($token === null, 401); // bad signature, expired, revoked or unknown
 
+// revoke() is atomic: when two requests race with the same token, only one gets true.
+abort_unless($token->revoke(), 401);
+
 $user = $token->instance;
-$token->revoke();
 
 return [
     'access_token' => $user->createToken('api')->plainTextToken,
@@ -81,5 +83,5 @@ Schedule::command('refresh-token:prune')->daily();
 
 - Decoding the JWT yourself and trusting its claims; always go through `RefreshToken::tokenable()`.
 - Committing `storage/refresh-token-*.key` or sharing the same keys across unrelated apps.
-- Accepting a refresh token again after it has been exchanged; revoke it.
+- Accepting a refresh token again after it has been exchanged; revoke it and reject the request when `revoke()` returns `false`.
 - Adding a `model` config key; it does not exist. Use `RefreshToken::useRefreshTokenModel()`.

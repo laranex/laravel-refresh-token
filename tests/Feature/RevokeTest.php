@@ -22,6 +22,21 @@ it('revokes a single token so it no longer verifies', function () {
         ->and(RefreshToken::tokenable($second))->toBeInstanceOf(RefreshTokenModel::class);
 });
 
+it('lets only one of two racing requests revoke the same token', function () {
+    $user = UserFactory::new()->create();
+    $jwt = $user->createRefreshToken();
+
+    // Two requests verify the same token before either revokes it.
+    $first = RefreshToken::tokenable($jwt);
+    $second = RefreshToken::tokenable($jwt);
+
+    expect($first->revoke())->toBeTrue()
+        ->and($second->revoke())->toBeFalse()
+        ->and($second->revoked)->toBeTrue()
+        ->and($first->revoke())->toBeFalse()
+        ->and($first->fresh()->revoked)->toBeTrue();
+});
+
 it('revokes every token of the same model and leaves other models alone', function () {
     $user = UserFactory::new()->create();
     $other = UserFactory::new()->create();

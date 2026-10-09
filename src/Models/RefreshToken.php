@@ -79,10 +79,23 @@ class RefreshToken extends Model
 
     /**
      * Revoke this refresh token.
+     *
+     * The update is atomic and only matches a token that is still active, so
+     * when two requests race to rotate the same token only one of them gets
+     * `true`; the other gets `false` and must reject the request.
+     *
+     * @return bool true when this call revoked the token, false when it was already revoked
      */
     public function revoke(): bool
     {
-        return $this->forceFill(['revoked' => true])->save();
+        $revoked = $this->newQuery()
+            ->whereKey($this->getKey())
+            ->where('revoked', false)
+            ->update(['revoked' => true]) > 0;
+
+        $this->forceFill(['revoked' => true])->syncOriginalAttribute('revoked');
+
+        return $revoked;
     }
 
     /**
