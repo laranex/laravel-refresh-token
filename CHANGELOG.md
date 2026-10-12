@@ -24,6 +24,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - The migration makes `id` the primary key and indexes `refreshable_type` + `refreshable_id`.
 - The migration also indexes `expires_at` and `revoked`, and `refresh-token:prune` deletes revoked, then expired tokens in chunks (`--chunk`, default 1000) so pruning a large table never locks it in one statement.
 - Added `HasRefreshTokens::refreshTokens()` (morph-many relation) and `expired()` / `revoked()` factory states.
+- Added `HasRefreshTokens::revokeRefreshTokens()`, which revokes every active refresh token of the model and returns the count; call it when the password changes.
 - New `--tag="refresh-token"` publishes the config and the migration together; the existing `refresh-token-config` and `refresh-token-migrations` tags are unchanged.
 - The factory's default `refreshable_type` is the morph class of the configured user model (`auth.providers.users.model`) instead of a hard-coded `App\Models\User`; use `->for($model, 'instance')` to attach factory tokens to a specific model.
 - `RefreshTokenFactory` reads `auth.providers.users.model` through the `Config` facade instead of the `config()` helper, which only `laravel/framework` defines, so the package runs on the `illuminate/*` components it requires.

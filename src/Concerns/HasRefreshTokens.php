@@ -61,6 +61,18 @@ trait HasRefreshTokens
     }
 
     /**
+     * Revoke every active refresh token of this model, for example after a password change,
+     * and return how many were revoked.
+     */
+    public function revokeRefreshTokens(): int
+    {
+        return $this->refreshTokens()
+            ->where('revoked', false)
+            ->where('expires_at', '>', (new Clock)->now())
+            ->update(['revoked' => true]);
+    }
+
+    /**
      * Every refresh token that has been issued for this model.
      *
      * @return MorphMany<RefreshTokenModel, $this>

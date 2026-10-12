@@ -93,3 +93,19 @@ it('attaches factory tokens to a specific model through the instance relation', 
         ->and((string) $token->refreshable_id)->toBe((string) $user->getKey())
         ->and($token->instance?->is($user))->toBeTrue();
 });
+
+it('revokes every active token of the model from the trait and returns the count', function () {
+    $user = UserFactory::new()->create();
+    $other = UserFactory::new()->create();
+    $tokens = [$user->createRefreshToken(), $user->createRefreshToken()];
+    RefreshToken::tokenable($user->createRefreshToken())?->revoke();
+    RefreshTokenModel::factory()->expired()->for($user, 'instance')->create();
+    $otherToken = $other->createRefreshToken();
+
+    expect($user->revokeRefreshTokens())->toBe(2)
+        ->and($user->refreshTokens()->where('revoked', false)->count())->toBe(1)
+        ->and(RefreshToken::tokenable($tokens[0]))->toBeNull()
+        ->and(RefreshToken::tokenable($tokens[1]))->toBeNull()
+        ->and(RefreshToken::tokenable($otherToken))->toBeInstanceOf(RefreshTokenModel::class)
+        ->and($user->revokeRefreshTokens())->toBe(0);
+});

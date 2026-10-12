@@ -65,6 +65,15 @@ return [
 
 `$token->revokeAll()` revokes every token of the same model (logout everywhere, suspected theft).
 
+### Revoke on password change
+
+Revoke every active token of the model when its password changes or is reset, so a stolen refresh token stops working; `revokeRefreshTokens()` returns how many it revoked:
+
+```php
+$user->forceFill(['password' => Hash::make($password)])->save();
+$user->revokeRefreshTokens();
+```
+
 ### Prune
 
 Schedule `refresh-token:prune` daily; it deletes expired and revoked rows in chunks of 1000 (`--chunk=5000` changes the size), using the `expires_at` and `revoked` indexes.
@@ -84,4 +93,5 @@ Schedule::command('refresh-token:prune')->daily();
 - Decoding the JWT yourself and trusting its claims; always go through `RefreshToken::tokenable()`.
 - Committing `storage/refresh-token-*.key` or sharing the same keys across unrelated apps.
 - Accepting a refresh token again after it has been exchanged; revoke it and reject the request when `revoke()` returns `false`.
+- Keeping refresh tokens alive after a password change or reset; call `$user->revokeRefreshTokens()`.
 - Adding a `model` config key; it does not exist. Use `RefreshToken::useRefreshTokenModel()`.
