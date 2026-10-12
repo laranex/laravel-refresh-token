@@ -23,6 +23,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['refreshable_type', 'refreshable_id']);
+            // refresh-token:prune deletes by each of these columns.
+            $table->index('expires_at');
+            $table->index('revoked');
         });
     }
 

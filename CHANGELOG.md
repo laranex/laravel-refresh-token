@@ -22,6 +22,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - `refresh-token:keys` creates the key directory if it is missing and exits with status 1 (instead of reporting success) when the directory or a key file cannot be written.
 - Tokens are stored with the model's morph class (`getMorphClass()`), so `Relation::morphMap()` aliases are respected.
 - The migration makes `id` the primary key and indexes `refreshable_type` + `refreshable_id`.
+- The migration also indexes `expires_at` and `revoked`, and `refresh-token:prune` deletes revoked, then expired tokens in chunks (`--chunk`, default 1000) so pruning a large table never locks it in one statement.
 - Added `HasRefreshTokens::refreshTokens()` (morph-many relation) and `expired()` / `revoked()` factory states.
 - New `--tag="refresh-token"` publishes the config and the migration together; the existing `refresh-token-config` and `refresh-token-migrations` tags are unchanged.
 - The factory's default `refreshable_type` is the morph class of the configured user model (`auth.providers.users.model`) instead of a hard-coded `App\Models\User`; use `->for($model, 'instance')` to attach factory tokens to a specific model.
@@ -47,7 +48,7 @@ Versions 2.x and 3.x were skipped so every Laranex package shares the same major
 - Replace calls to `RefreshToken::makeCryptKey($type)->getKeyContents()` with `RefreshToken::keyContents($type)`.
 - Pass a future date to `RefreshToken::refreshTokensExpireIn()`; a past date or the current moment now throws an `InvalidArgumentException`.
 - If your app uses a morph map, tokens issued by v1 stored the full class name; update `refreshable_type` in the refresh tokens table to the alias or revoke those tokens.
-- Existing tables keep working. To get the new primary key and index on an existing table, add them in a migration of your own (`$table->primary('id')` and `$table->index(['refreshable_type', 'refreshable_id'])`).
+- Existing tables keep working. To get the new primary key and index on an existing table, add them in a migration of your own (`$table->primary('id')`, `$table->index(['refreshable_type', 'refreshable_id'])`, `$table->index('expires_at')` and `$table->index('revoked')`).
 
 ## v1.0.1 - 2026-06-07
 

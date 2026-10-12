@@ -67,7 +67,7 @@ return [
 
 ### Prune
 
-Schedule `refresh-token:prune` daily; it deletes expired and revoked rows.
+Schedule `refresh-token:prune` daily; it deletes expired and revoked rows in chunks of 1000 (`--chunk=5000` changes the size), using the `expires_at` and `revoked` indexes.
 
 ```php
 Schedule::command('refresh-token:prune')->daily();

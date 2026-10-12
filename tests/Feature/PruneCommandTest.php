@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Laranex\RefreshToken\Models\RefreshToken as RefreshTokenModel;
 use Laranex\RefreshToken\RefreshToken;
 use Workbench\Database\Factories\UserFactory;
@@ -40,4 +41,43 @@ it('prunes nothing when every token is valid', function () {
         ->assertExitCode(0);
 
     expect(RefreshTokenModel::query()->count())->toBe(2);
+});
+
+it('deletes in chunks of the given size and counts a token that is both expired and revoked once', function () {
+    RefreshTokenModel::factory()->count(2)->create();
+    RefreshTokenModel::factory()->count(3)->expired()->create();
+    RefreshTokenModel::factory()->count(2)->revoked()->create();
+    RefreshTokenModel::factory()->expired()->revoked()->create();
+
+    DB::enableQueryLog();
+
+    $this->artisan('refresh-token:prune', ['--chunk' => 2])
+        ->expectsOutput('Pruned 6 refresh token(s).')
+        ->assertExitCode(0);
+
+    $deletes = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_starts_with(strtolower($query['query']), 'delete'));
+
+    expect(RefreshTokenModel::query()->count())->toBe(2)
+        ->and($deletes)->toHaveCount(4)
+        ->and($deletes->every(fn (array $query): bool => count($query['bindings']) <= 2))->toBeTrue();
+});
+
+it('rejects a chunk size that is not a positive integer', function (string $chunk) {
+    RefreshTokenModel::factory()->revoked()->create();
+
+    $this->artisan('refresh-token:prune', ['--chunk' => $chunk])
+        ->expectsOutput('The --chunk option must be a positive integer.')
+        ->assertExitCode(2);
+
+    expect(RefreshTokenModel::query()->count())->toBe(1);
+})->with(['0', '-5', 'many']);
+
+it('indexes the columns the prune command filters on', function () {
+    $indexed = collect(DB::select("select name from pragma_index_list('laravel_refresh_tokens')"))
+        ->flatMap(fn (object $index): array => array_column(
+            DB::select('select name from pragma_index_info(?)', [$index->name]),
+            'name',
+        ));
+
+    expect($indexed)->toContain('expires_at', 'revoked');
 });
